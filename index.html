@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Fruit Cutter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        /* Game Area with Space Background */
+        #gameArea {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            /* ⚠️ YAHAN AAP APNI SPACE IMAGE KA PATH BADAL SAKTE HAIN */
+            background-image: url('space_background.jpg'); 
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+        /* Score Display */
+        #scoreBoard {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 30px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00f, 0 0 20px #00f;
+            z-index: 10;
+        }
+        /* Game Elements (Fruits/Bombs) */
+        .element {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        /* Game Over Screen */
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            color: #ff0055;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #gameOverScreen h1 {
+            font-size: 70px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #ff0055;
+            letter-spacing: 5px;
+        }
+        #gameOverScreen p {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #restartBtn {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ff0055;
+        }
+        #restartBtn:hover {
+            background: #ff3377;
+        }
+        /* Hidden Asset Gallery */
+        #gameAssets {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="voiceFruit1" src="fahhhhhhhhhhhhhh.mp3" preload="auto"></audio>
+    <audio id="voiceFruit2" src="bol-na-madarchod.mp3" preload="auto"></audio>
+    <audio id="voiceFruit3" src="aisa-mat-karo.mp3" preload="auto"></audio>
+    <audio id="voiceFruit4" src="kyu-re-madarchod-cid.mp3" preload="auto"></audio>
+    <audio id="voiceFruit5" src="yooooooooooooooooooooooooo_4_objp8XX.mp3" preload="auto"></audio>
+    
+    <audio id="voiceGameOver" src="mka-ladle-meow-gop.mp3" preload="auto"></audio>
+    <div id="gameAssets">
+        <img id="imgFruit1" src="fruit 1.jpg">
+        <img id="imgFruit2" src="fruit 3.jpg">
+        <img id="imgFruit3" src="fruit 4.jpg">
+        <img id="imgFruit4" src="fruit 5.jpg">
+        <img id="imgFruit5" src="fruit 6.jpg">
+        <img id="imgBomb"   src="fruit 2.jpg">
+    </div>
+    <div id="gameArea">
+        <div id="scoreBoard">Score: <span id="score">0</span></div>
+        
+        <div id="gameOverScreen">
+            <h1>LOOSER</h1>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button id="restartBtn" onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const scoreDisplay = document.getElementById('score');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreDisplay = document.getElementById('finalScore');
+
+        let score = 0;
+        let gameInterval;
+        let isGameOver = false;
+
+        // Configuration mapping HTML elements directly
+        const elementsConfig = [
+            { type: 'fruit', assetId: 'imgFruit1', audioId: 'voiceFruit1' },
+            { type: 'fruit', assetId: 'imgFruit2', audioId: 'voiceFruit2' },
+            { type: 'fruit', assetId: 'imgFruit3', audioId: 'voiceFruit3' },
+            { type: 'fruit', assetId: 'imgFruit4', audioId: 'voiceFruit4' },
+            { type: 'fruit', assetId: 'imgFruit5', audioId: 'voiceFruit5' },
+            { type: 'bomb',  assetId: 'imgBomb',   audioId: 'voiceGameOver' }
+        ];
+
+        function startGame() {
+            score = 0;
+            isGameOver = false;
+            scoreDisplay.innerText = score;
+            gameOverScreen.style.display = 'none';
+            
+            const activeElements = document.querySelectorAll('.element');
+            activeElements.forEach(el => el.remove());
+
+            clearInterval(gameInterval);
+            gameInterval = setInterval(spawnElement, 1000);
+        }
+
+        function spawnElement() {
+            if (isGameOver) return;
+
+            const randomConfig = elementsConfig[Math.floor(Math.random() * elementsConfig.length)];
+            
+            // HTML Image Section se source nikalna
+            const assetImg = document.getElementById(randomConfig.assetId);
+            if (!assetImg) return;
+
+            const element = document.createElement('img');
+            element.src = assetImg.src; // HTML Tag se image automatic load hogi
+            element.classList.add('element');
+            
+            const randomX = Math.random() * (window.innerWidth - 90);
+            element.style.left = `${randomX}px`;
+            element.style.top = `${window.innerHeight}px`;
+
+            gameArea.appendChild(element);
+
+            let positionY = window.innerHeight;
+            let speed = Math.random() * 4 + 4; 
+            let angle = Math.random() * 2 - 1; 
+            let positionX = randomX;
+
+            function updateMovement() {
+                if (isGameOver) {
+                    element.remove();
+                    return;
+                }
+
+                positionY -= speed; 
+                positionX += angle; 
+                element.style.top = `${positionY}px`;
+                element.style.left = `${positionX}px`;
+
+                // 3D rotation effect
+                element.style.transform = `rotate(${positionY}deg)`;
+
+                if (positionY < -90) {
+                    element.remove();
+                } else {
+                    requestAnimationFrame(updateMovement);
+                }
+            }
+
+            element.addEventListener('mousedown', () => handleCut(randomConfig, element));
+            element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleCut(randomConfig, element);
+            });
+
+            requestAnimationFrame(updateMovement);
+        }
+
+        function handleCut(config, element) {
+            if (config.type === 'fruit') {
+                score++;
+                scoreDisplay.innerText = score;
+
+                const audio = document.getElementById(config.audioId);
+                if (audio) {
+                    audio.currentTime = 0; 
+                    audio.play().catch(e => console.log("Audio play error:", e));
+                }
+
+                element.remove();
+            } else if (config.type === 'bomb') {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            isGameOver = true;
+            clearInterval(gameInterval);
+            
+            const gameOverAudio = document.getElementById('voiceGameOver');
+            if (gameOverAudio) {
+                gameOverAudio.currentTime = 0;
+                gameOverAudio.play().catch(e => console.log("Audio play error:", e));
+            }
+
+            finalScoreDisplay.innerText = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        window.onload = startGame;
+    </script>
+</body>
+</html>
